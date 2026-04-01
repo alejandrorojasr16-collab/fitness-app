@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Fitness Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #1e3a8a, #9333ea);
+    color: white;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.container {
+    max-width: 500px;
+    margin: auto;
+}
+
+.card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: 15px;
+    margin-top: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    margin-top: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.add-btn {
+    background: #22c55e;
+}
+
+.add-btn:hover {
+    background: #16a34a;
+}
+
+.delete-btn {
+    background: #ef4444;
+}
+
+.exercise {
+    background: rgba(0,0,0,0.2);
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.timer {
+    text-align: center;
+    font-size: 30px;
+    margin-top: 15px;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🔥 Fitness Pro</h1>
+
+<div class="container">
+
+<div class="card">
+    <input id="routineName" placeholder="Nombre de rutina">
+    <button class="add-btn" onclick="addRoutine()">Crear rutina</button>
+</div>
+
+<div id="routines"></div>
+
+<div class="timer" id="timer">⏱ 0</div>
+
+</div>
+
+<script>
+let routines = JSON.parse(localStorage.getItem("routinesUI")) || [];
+let timerInterval;
+
+function save() {
+    localStorage.setItem("routinesUI", JSON.stringify(routines));
+}
+
+function render() {
+    const container = document.getElementById("routines");
+    container.innerHTML = "";
+
+    routines.forEach((routine, rIndex) => {
+        let html = `
+        <div class="card">
+            <h3>${routine.name}</h3>
+
+            <input placeholder="Ejercicio" id="name-${rIndex}">
+            <input type="number" placeholder="Series" id="series-${rIndex}">
+            <input type="number" placeholder="Reps" id="reps-${rIndex}">
+            <input type="number" placeholder="Peso (kg)" id="weight-${rIndex}">
+            <input type="number" placeholder="Descanso (seg)" id="rest-${rIndex}">
+            <button class="add-btn" onclick="addExercise(${rIndex})">Agregar ejercicio</button>
+        `;
+
+        routine.exercises.forEach((ex, eIndex) => {
+            html += `
+            <div class="exercise">
+                <strong>${ex.name}</strong><br>
+                ${ex.series}x${ex.reps} | ${ex.weight}kg | ⏱ ${ex.rest}s
+                <button class="add-btn" onclick="startTimer(${ex.rest})">Descanso</button>
+                <button class="delete-btn" onclick="deleteExercise(${rIndex}, ${eIndex})">Eliminar</button>
+            </div>
+            `;
+        });
+
+        html += `<button class="delete-btn" onclick="deleteRoutine(${rIndex})">Eliminar rutina</button></div>`;
+        container.innerHTML += html;
+    });
+}
+
+function addRoutine() {
+    const name = document.getElementById("routineName").value;
+    if (!name) return alert("Escribe un nombre");
+
+    routines.push({ name, exercises: [] });
+    save();
+    render();
+    document.getElementById("routineName").value = "";
+}
+
+function addExercise(rIndex) {
+    const name = document.getElementById(`name-${rIndex}`).value;
+    const series = document.getElementById(`series-${rIndex}`).value;
+    const reps = document.getElementById(`reps-${rIndex}`).value;
+    const weight = document.getElementById(`weight-${rIndex}`).value;
+    const rest = document.getElementById(`rest-${rIndex}`).value;
+
+    if (!name || !series || !reps || !weight || !rest) {
+        return alert("Completa todo");
+    }
+
+    routines[rIndex].exercises.push({ name, series, reps, weight, rest });
+    save();
+    render();
+}
+
+function deleteRoutine(index) {
+    routines.splice(index, 1);
+    save();
+    render();
+}
+
+function deleteExercise(rIndex, eIndex) {
+    routines[rIndex].exercises.splice(eIndex, 1);
+    save();
+    render();
+}
+
+function startTimer(seconds) {
+    clearInterval(timerInterval);
+    let time = seconds;
+    const display = document.getElementById("timer");
+
+    timerInterval = setInterval(() => {
+        display.textContent = "⏱ " + time;
+
+        if (time <= 0) {
+            clearInterval(timerInterval);
+            alert("Listo 💪");
+        }
+        time--;
+    }, 1000);
+}
+
+render();
+</script>
+
+</body>
+</html>
